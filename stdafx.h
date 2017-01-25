@@ -38,7 +38,8 @@
 #include <afxcontrolbars.h>     // 功能区和控件条的 MFC 支持
 
 
-
+#include <d3d9.h>
+#pragma comment(lib, "d3d9.lib")
 
 
 

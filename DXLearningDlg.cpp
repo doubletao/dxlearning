@@ -6,6 +6,7 @@
 #include "DXLearning.h"
 #include "DXLearningDlg.h"
 #include "afxdialogex.h"
+#include "D3DXDeviceHelper.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -46,6 +47,10 @@ BOOL CDXLearningDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	CRect rtClient;
+	GetClientRect(rtClient);
+	CD3DXDeviceHelper::Instance().SetBasicInfomation(AfxGetInstanceHandle(), m_hWnd, rtClient.Width(), rtClient.Height(), TRUE);
+	CD3DXDeviceHelper::Instance().InitialD3D();
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }

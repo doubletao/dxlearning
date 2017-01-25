@@ -41,9 +41,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(DXSDK_DIR)Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(DXSDK_DIR)Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -99,6 +103,7 @@
     <None Include="res\DXLearning.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="D3DXDeviceHelper.h" />
     <ClInclude Include="DXLearning.h" />
     <ClInclude Include="DXLearningDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -106,6 +111,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="D3DXDeviceHelper.cpp" />
     <ClCompile Include="DXLearning.cpp" />
     <ClCompile Include="DXLearningDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
