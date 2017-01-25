@@ -81,6 +81,7 @@ void CDXLearningDlg::OnPaint()
 	else
 	{
 		CDialogEx::OnPaint();
+		D3DDrawBuffer();
 	}
 }
 
@@ -89,5 +90,15 @@ void CDXLearningDlg::OnPaint()
 HCURSOR CDXLearningDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
+}
+
+void CDXLearningDlg::D3DDrawBuffer()
+{
+	if(CD3DXDeviceHelper::Instance().Initialized())
+	{
+		CD3DXDeviceHelper::Instance().GetDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL,
+			0x00ff0000, 1.0f, 0);
+		CD3DXDeviceHelper::Instance().GetDevice()->Present(NULL, NULL, NULL, NULL);
+	}
 }
 

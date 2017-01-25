@@ -18,10 +18,15 @@ private:
 	int _vp;//顶点运算类型
 	D3DPRESENT_PARAMETERS _d3dParam;//设备接口创建参数
 	IDirect3DDevice9 * _device;//设备指针
+
+	BOOL bInitialized;
 public:
 	void SetBasicInfomation(HINSTANCE hInst, HWND hWnd, int nWidth, int nHeight, BOOL bWindowed);
 	BOOL InitialD3D();
 public:
 	static CD3DXDeviceHelper & Instance();
+	IDirect3D9 * GetD3D();
+	IDirect3DDevice9 * GetDevice();
+	BOOL Initialized();
 };
 
