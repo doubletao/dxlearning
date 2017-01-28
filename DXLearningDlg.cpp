@@ -20,6 +20,7 @@
 
 CDXLearningDlg::CDXLearningDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CDXLearningDlg::IDD, pParent)
+	, _tLastTime(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -32,6 +33,9 @@ void CDXLearningDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDXLearningDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_WM_LBUTTONDOWN()
+	ON_WM_MOUSEMOVE()
+	ON_WM_LBUTTONUP()
 END_MESSAGE_MAP()
 
 
@@ -51,6 +55,7 @@ BOOL CDXLearningDlg::OnInitDialog()
 	GetClientRect(rtClient);
 	CD3DXDeviceHelper::Instance().SetBasicInfomation(AfxGetInstanceHandle(), m_hWnd, rtClient.Width(), rtClient.Height(), TRUE);
 	CD3DXDeviceHelper::Instance().InitialD3D();
+	CD3DXDeviceHelper::Instance().Setup();
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -96,9 +101,37 @@ void CDXLearningDlg::D3DDrawBuffer()
 {
 	if(CD3DXDeviceHelper::Instance().Initialized())
 	{
-		CD3DXDeviceHelper::Instance().GetDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL,
-			0x00ff0000, 1.0f, 0);
-		CD3DXDeviceHelper::Instance().GetDevice()->Present(NULL, NULL, NULL, NULL);
+		CD3DXDeviceHelper::Instance().Display(clock() - _tLastTime);
 	}
+	_tLastTime = clock();
+}
+
+void CDXLearningDlg::OnLButtonDown( UINT nFlags, CPoint point )
+{
+	Invalidate(FALSE);
+	_ptBegin = point;
+	CDialogEx::OnLButtonDown(nFlags, point);
+}
+
+void CDXLearningDlg::OnMouseMove( UINT nFlags, CPoint point )
+{
+	if (GetKeyState(VK_LBUTTON) & 0x8000)
+	{
+		float x = 0.0f;
+		float y = 0.0f;
+		x = point.y - _ptBegin.y;
+		y = point.x - _ptBegin.x;
+		x /= -100;
+		y /= -100;
+		CD3DXDeviceHelper::Instance().SetRotate(x, y, 0);
+		Invalidate(FALSE);
+	}
+	CDialogEx::OnMouseMove(nFlags, point);
+}
+
+void CDXLearningDlg::OnLButtonUp( UINT nFlags, CPoint point )
+{
+	Invalidate(FALSE);
+	CDialogEx::OnLButtonUp(nFlags, point);
 }
 

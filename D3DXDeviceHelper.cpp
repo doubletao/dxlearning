@@ -1,6 +1,22 @@
 #include "StdAfx.h"
 #include "D3DXDeviceHelper.h"
 
+struct Vertex
+{
+	float _x;
+	float _y;
+	float _z;
+	Vertex(){}
+	Vertex(float x, float y, float z)
+		: _x(x)
+		, _y(y)
+		, _z(z)
+	{
+	}
+	static const DWORD FVF;
+};
+const DWORD Vertex::FVF = D3DFVF_XYZ;
+
 CD3DXDeviceHelper & CD3DXDeviceHelper::Instance()
 {
 	static CD3DXDeviceHelper instance;
@@ -17,6 +33,10 @@ CD3DXDeviceHelper::CD3DXDeviceHelper(void)
 	, _vp(0)
 	, _device(NULL)
 	, bInitialized(FALSE)
+	, VB(NULL)
+	, IB(NULL)
+	, _x(0.0f)
+	, _y(0.0f)
 {
 	memset(&_cap9, 0, sizeof(D3DCAPS9));
 	memset(&_d3dParam, 0, sizeof(D3DPRESENT_PARAMETERS));
@@ -25,6 +45,7 @@ CD3DXDeviceHelper::CD3DXDeviceHelper(void)
 
 CD3DXDeviceHelper::~CD3DXDeviceHelper(void)
 {
+	Clear();
 }
 
 void CD3DXDeviceHelper::SetBasicInfomation(HINSTANCE hInst, HWND hWnd, int nWidth, int nHeight, BOOL bWindowed)
@@ -108,4 +129,105 @@ IDirect3DDevice9 * CD3DXDeviceHelper::GetDevice()
 BOOL CD3DXDeviceHelper::Initialized()
 {
 	return bInitialized;
+}
+
+BOOL CD3DXDeviceHelper::Setup()
+{
+	_device->CreateVertexBuffer(8 * sizeof(Vertex), D3DUSAGE_WRITEONLY, Vertex::FVF, D3DPOOL_MANAGED, &VB, 0);
+	_device->CreateIndexBuffer(36 * sizeof(WORD), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, &IB, 0);
+
+	Vertex * vertices = NULL;
+	VB->Lock(0, 0, (void **)&vertices, 0);
+	vertices[0] = Vertex(-1.0f, -1.0f, -1.0f);
+	vertices[1] = Vertex(-1.0f, 1.0f, -1.0f);
+	vertices[2] = Vertex(1.0f, 1.0f, -1.0f);
+	vertices[3] = Vertex(1.0f, -1.0f, -1.0f);
+	vertices[4] = Vertex(-1.0f, -1.0f, 1.0f);
+	vertices[5] = Vertex(-1.0f, 1.0f, 1.0f);
+	vertices[6] = Vertex(1.0f, 1.0f, 1.0f);
+	vertices[7] = Vertex(1.0f, -1.0f, 1.0f);
+	VB->Unlock();
+
+	WORD * indics = NULL;
+	IB->Lock(0, 0, (void **)&indics, 0);
+	//font side
+	indics[0] = 0;indics[1] = 1;indics[2] = 2;
+	indics[3] = 0;indics[4] = 2;indics[5] = 3;
+	//back side
+	indics[6] = 4;indics[7] = 6;indics[8] = 5;
+	indics[9] = 4;indics[10] = 7;indics[11] = 6;
+	//left side
+	indics[12] = 4;indics[13] = 5;indics[14] = 1;
+	indics[15] = 4;indics[16] = 1;indics[17] = 0;
+	//right side
+	indics[18] = 3;indics[19] = 2;indics[20] = 6;
+	indics[21] = 3;indics[22] = 6;indics[23] = 7;
+	//top side
+	indics[24] = 1;indics[25] = 5;indics[26] = 6;
+	indics[27] = 1;indics[28] = 6;indics[29] = 2;
+	//bottom side
+	indics[30] = 4;indics[31] = 0;indics[32] = 3;
+	indics[33] = 4;indics[34] = 3;indics[35] = 7;
+	IB->Unlock();
+
+	//position and aim the camera
+	D3DXVECTOR3 position(0.0f, 0.0f, -5.0f);
+	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
+	D3DXMATRIX V;
+	D3DXMatrixLookAtLH(&V, &position, &target, &up);
+	_device->SetTransform(D3DTS_VIEW, &V);
+
+	D3DXMATRIX proj;
+	D3DXMatrixPerspectiveLH(&proj, D3DX_PI * 0.5, (float)_nWidth / (float)_nHeight, 1.0f, 1000.0f);
+	_device->SetTransform(D3DTS_PROJECTION, &proj);
+
+	_device->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+
+	return TRUE;
+}
+
+BOOL CD3DXDeviceHelper::Display( time_t timeDeta )
+{
+	if (_x > D3DX_PI * 2)
+	{
+		_x = 0.0f;
+	}
+	if (_y > D3DX_PI * 2)
+	{
+		_y = 0.0f;
+	}
+	D3DXMATRIX Rx, Ry;
+	D3DXMatrixRotationX(&Rx, _x);
+	D3DXMatrixRotationY(&Ry, _y);
+	D3DXMATRIX p = Rx * Ry;
+	_device->SetTransform(D3DTS_WORLD, &p);
+
+	CD3DXDeviceHelper::Instance().GetDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL,
+		0xffffffff, 1.0f, 0);
+
+	_device->BeginScene();
+
+	_device->SetStreamSource(0, VB, 0, sizeof(Vertex));
+	_device->SetIndices(IB);
+	_device->SetFVF(Vertex::FVF);
+
+	_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 8, 0, 12);
+
+	_device->EndScene();
+
+	CD3DXDeviceHelper::Instance().GetDevice()->Present(NULL, NULL, NULL, NULL);
+	return TRUE;
+}
+
+void CD3DXDeviceHelper::Clear()
+{
+	ReleaseObject<IDirect3DVertexBuffer9 *>(VB);
+	ReleaseObject<IDirect3DIndexBuffer9 *>(IB);
+}
+
+void CD3DXDeviceHelper::SetRotate( float x, float y, float z )
+{
+	_x = x;
+	_y = y;
 }
