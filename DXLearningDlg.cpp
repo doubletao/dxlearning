@@ -110,6 +110,7 @@ void CDXLearningDlg::OnLButtonDown( UINT nFlags, CPoint point )
 {
 	Invalidate(FALSE);
 	_ptBegin = point;
+	SetCapture();
 	CDialogEx::OnLButtonDown(nFlags, point);
 }
 
@@ -132,6 +133,7 @@ void CDXLearningDlg::OnMouseMove( UINT nFlags, CPoint point )
 void CDXLearningDlg::OnLButtonUp( UINT nFlags, CPoint point )
 {
 	Invalidate(FALSE);
+	ReleaseCapture();
 	CDialogEx::OnLButtonUp(nFlags, point);
 }
 

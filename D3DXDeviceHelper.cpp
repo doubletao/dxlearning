@@ -6,16 +6,18 @@ struct Vertex
 	float _x;
 	float _y;
 	float _z;
+	D3DCOLOR _color;
 	Vertex(){}
-	Vertex(float x, float y, float z)
+	Vertex(float x, float y, float z, D3DCOLOR color)
 		: _x(x)
 		, _y(y)
 		, _z(z)
+		, _color(color)
 	{
 	}
 	static const DWORD FVF;
 };
-const DWORD Vertex::FVF = D3DFVF_XYZ;
+const DWORD Vertex::FVF = D3DFVF_XYZ | D3DFVF_DIFFUSE;
 
 CD3DXDeviceHelper & CD3DXDeviceHelper::Instance()
 {
@@ -138,14 +140,14 @@ BOOL CD3DXDeviceHelper::Setup()
 
 	Vertex * vertices = NULL;
 	VB->Lock(0, 0, (void **)&vertices, 0);
-	vertices[0] = Vertex(-1.0f, -1.0f, -1.0f);
-	vertices[1] = Vertex(-1.0f, 1.0f, -1.0f);
-	vertices[2] = Vertex(1.0f, 1.0f, -1.0f);
-	vertices[3] = Vertex(1.0f, -1.0f, -1.0f);
-	vertices[4] = Vertex(-1.0f, -1.0f, 1.0f);
-	vertices[5] = Vertex(-1.0f, 1.0f, 1.0f);
-	vertices[6] = Vertex(1.0f, 1.0f, 1.0f);
-	vertices[7] = Vertex(1.0f, -1.0f, 1.0f);
+	vertices[0] = Vertex(-1.0f, -1.0f, -1.0f, D3DCOLOR_XRGB(255, 0, 0));
+	vertices[1] = Vertex(-1.0f, 1.0f, -1.0f, D3DCOLOR_XRGB(255, 255, 0));
+	vertices[2] = Vertex(1.0f, 1.0f, -1.0f, D3DCOLOR_XRGB(255, 255, 255));
+	vertices[3] = Vertex(1.0f, -1.0f, -1.0f, D3DCOLOR_XRGB(0, 255, 255));
+	vertices[4] = Vertex(-1.0f, -1.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 255));
+	vertices[5] = Vertex(-1.0f, 1.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0));
+	vertices[6] = Vertex(1.0f, 1.0f, 1.0f, D3DCOLOR_XRGB(255, 0, 0));
+	vertices[7] = Vertex(1.0f, -1.0f, 1.0f, D3DCOLOR_XRGB(255, 255, 0));
 	VB->Unlock();
 
 	WORD * indics = NULL;
@@ -171,7 +173,7 @@ BOOL CD3DXDeviceHelper::Setup()
 	IB->Unlock();
 
 	//position and aim the camera
-	D3DXVECTOR3 position(0.0f, 0.0f, -5.0f);
+	D3DXVECTOR3 position(0.0f, 0.0f, -6.0f);
 	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
 	D3DXMATRIX V;
@@ -182,7 +184,8 @@ BOOL CD3DXDeviceHelper::Setup()
 	D3DXMatrixPerspectiveLH(&proj, D3DX_PI * 0.5, (float)_nWidth / (float)_nHeight, 1.0f, 1000.0f);
 	_device->SetTransform(D3DTS_PROJECTION, &proj);
 
-	_device->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+	//_device->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);//线框模式
+	_device->SetRenderState(D3DRS_LIGHTING, FALSE);//关闭灯光
 
 	return TRUE;
 }
@@ -197,11 +200,10 @@ BOOL CD3DXDeviceHelper::Display( time_t timeDeta )
 	{
 		_y = 0.0f;
 	}
-	D3DXMATRIX Rx, Ry;
+	D3DXMATRIX Rx, Ry, P;
 	D3DXMatrixRotationX(&Rx, _x);
 	D3DXMatrixRotationY(&Ry, _y);
-	D3DXMATRIX p = Rx * Ry;
-	_device->SetTransform(D3DTS_WORLD, &p);
+	D3DXMATRIX pR = Rx * Ry;
 
 	CD3DXDeviceHelper::Instance().GetDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL,
 		0xffffffff, 1.0f, 0);
@@ -212,7 +214,21 @@ BOOL CD3DXDeviceHelper::Display( time_t timeDeta )
 	_device->SetIndices(IB);
 	_device->SetFVF(Vertex::FVF);
 
-	_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 8, 0, 12);
+	{
+		_device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_FLAT);
+		D3DXMatrixTranslation(&P, -2.0f, 0.0f, 0.0f);
+		D3DXMATRIX p = pR * P;
+		_device->SetTransform(D3DTS_WORLD, &p);
+		_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 8, 0, 12);
+	}
+
+	{
+		_device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
+		D3DXMatrixTranslation(&P, 2.0f, 0.0f, 0.0f);
+		D3DXMATRIX p = pR * P;
+		_device->SetTransform(D3DTS_WORLD, &p);
+		_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 8, 0, 12);
+	}
 
 	_device->EndScene();
 
