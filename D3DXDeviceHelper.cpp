@@ -1,14 +1,14 @@
 #include "StdAfx.h"
 #include "D3DXDeviceHelper.h"
 
-struct Vertex
+struct VertexColor
 {
 	float _x;
 	float _y;
 	float _z;
 	D3DCOLOR _color;
-	Vertex(){}
-	Vertex(float x, float y, float z, D3DCOLOR color)
+	VertexColor(){}
+	VertexColor(float x, float y, float z, D3DCOLOR color)
 		: _x(x)
 		, _y(y)
 		, _z(z)
@@ -17,7 +17,23 @@ struct Vertex
 	}
 	static const DWORD FVF;
 };
-const DWORD Vertex::FVF = D3DFVF_XYZ | D3DFVF_DIFFUSE;
+const DWORD VertexColor::FVF = D3DFVF_XYZ | D3DFVF_DIFFUSE;
+
+struct VertexNormal
+{
+	float _x;
+	float _y;
+	float _z;
+	float _nx;
+	float _ny;
+	float _nz;
+	VertexNormal(){}
+	VertexNormal(float x, float y, float z, float nx, float ny, float nz)
+		: _x(x), _y(y), _z(z), _nx(nx), _ny(ny), _nz(nz)
+	{}
+	static const WORD FVF;
+};
+const WORD VertexNormal::FVF = D3DFVF_XYZ | D3DFVF_NORMAL;
 
 CD3DXDeviceHelper & CD3DXDeviceHelper::Instance()
 {
@@ -133,21 +149,21 @@ BOOL CD3DXDeviceHelper::Initialized()
 	return bInitialized;
 }
 
-BOOL CD3DXDeviceHelper::Setup()
+BOOL CD3DXDeviceHelper::SetupColorSample()
 {
-	_device->CreateVertexBuffer(8 * sizeof(Vertex), D3DUSAGE_WRITEONLY, Vertex::FVF, D3DPOOL_MANAGED, &VB, 0);
+	_device->CreateVertexBuffer(8 * sizeof(VertexColor), D3DUSAGE_WRITEONLY, VertexColor::FVF, D3DPOOL_MANAGED, &VB, 0);
 	_device->CreateIndexBuffer(36 * sizeof(WORD), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, &IB, 0);
 
-	Vertex * vertices = NULL;
+	VertexColor * vertices = NULL;
 	VB->Lock(0, 0, (void **)&vertices, 0);
-	vertices[0] = Vertex(-1.0f, -1.0f, -1.0f, D3DCOLOR_XRGB(255, 0, 0));
-	vertices[1] = Vertex(-1.0f, 1.0f, -1.0f, D3DCOLOR_XRGB(255, 255, 0));
-	vertices[2] = Vertex(1.0f, 1.0f, -1.0f, D3DCOLOR_XRGB(255, 255, 255));
-	vertices[3] = Vertex(1.0f, -1.0f, -1.0f, D3DCOLOR_XRGB(0, 255, 255));
-	vertices[4] = Vertex(-1.0f, -1.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 255));
-	vertices[5] = Vertex(-1.0f, 1.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0));
-	vertices[6] = Vertex(1.0f, 1.0f, 1.0f, D3DCOLOR_XRGB(255, 0, 0));
-	vertices[7] = Vertex(1.0f, -1.0f, 1.0f, D3DCOLOR_XRGB(255, 255, 0));
+	vertices[0] = VertexColor(-1.0f, -1.0f, -1.0f, D3DCOLOR_XRGB(255, 0, 0));
+	vertices[1] = VertexColor(-1.0f, 1.0f, -1.0f, D3DCOLOR_XRGB(255, 255, 0));
+	vertices[2] = VertexColor(1.0f, 1.0f, -1.0f, D3DCOLOR_XRGB(255, 255, 255));
+	vertices[3] = VertexColor(1.0f, -1.0f, -1.0f, D3DCOLOR_XRGB(0, 255, 255));
+	vertices[4] = VertexColor(-1.0f, -1.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 255));
+	vertices[5] = VertexColor(-1.0f, 1.0f, 1.0f, D3DCOLOR_XRGB(0, 0, 0));
+	vertices[6] = VertexColor(1.0f, 1.0f, 1.0f, D3DCOLOR_XRGB(255, 0, 0));
+	vertices[7] = VertexColor(1.0f, -1.0f, 1.0f, D3DCOLOR_XRGB(255, 255, 0));
 	VB->Unlock();
 
 	WORD * indics = NULL;
@@ -190,7 +206,7 @@ BOOL CD3DXDeviceHelper::Setup()
 	return TRUE;
 }
 
-BOOL CD3DXDeviceHelper::Display( time_t timeDeta )
+BOOL CD3DXDeviceHelper::DisplayColorSample( time_t timeDeta )
 {
 	if (_x > D3DX_PI * 2)
 	{
@@ -210,9 +226,9 @@ BOOL CD3DXDeviceHelper::Display( time_t timeDeta )
 
 	_device->BeginScene();
 
-	_device->SetStreamSource(0, VB, 0, sizeof(Vertex));
+	_device->SetStreamSource(0, VB, 0, sizeof(VertexColor));
 	_device->SetIndices(IB);
-	_device->SetFVF(Vertex::FVF);
+	_device->SetFVF(VertexColor::FVF);
 
 	{
 		_device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_FLAT);
@@ -246,4 +262,144 @@ void CD3DXDeviceHelper::SetRotate( float x, float y, float z )
 {
 	_x = x;
 	_y = y;
+}
+
+BOOL CD3DXDeviceHelper::SetupLightSample()
+{
+	//启用光照
+	_device->SetRenderState(D3DRS_LIGHTING, true);
+
+	//创建顶点缓存
+	_device->CreateVertexBuffer(18 * sizeof(VertexNormal), D3DUSAGE_WRITEONLY, VertexNormal::FVF, D3DPOOL_MANAGED, &VB, NULL);
+
+#if 0
+	//求出底边顶点的法向量
+	D3DXVECTOR3 v1(-1.0f, 0.0f, -1.0f);
+	D3DXVECTOR3 v2(1.0f, 0.0f, -1.0f);
+	D3DXVECTOR3 v3(1.0f, 0.0f, 1.0f);
+	D3DXVECTOR3 vF = v2 - v1;
+	D3DXVECTOR3 vS = v3 - v1;
+	D3DXVECTOR3 vN(0.0f, 0.0f, 0.0f);
+	D3DXVec3Cross(&vN, &vF, &vS);
+#endif
+
+	//金字塔
+	VertexNormal * v;
+	VB->Lock(0, 0, (void **)&v, 0);
+	//front
+	v[0] = VertexNormal(-1.0f, 0.0f, -1.0f, 0.0f, 0.707f, -0.707f);
+	v[1] = VertexNormal(0.0f, 1.0f, 0.0f, 0.0f, 0.707f, -0.707f);
+	v[2] = VertexNormal(1.0f, 0.0f, -1.0f, 0.0f, 0.707f, -0.707f);
+	//left
+	v[3] = VertexNormal(-1.0f, 0.0f, 1.0f, -0.707f, 0.707f, 0.0f);
+	v[4] = VertexNormal(0.0f, 1.0f, 0.0f, -0.707f, 0.707f, 0.0f);
+	v[5] = VertexNormal(-1.0f, 0.0f, -1.0f, -0.707f, 0.707f, 0.0f);
+	//right
+	v[6] = VertexNormal(1.0f, 0.0f, -1.0f, 0.707f, 0.707f, 0.0f);
+	v[7] = VertexNormal(0.0f, 1.0f, 0.0f, 0.707f, 0.707f, 0.0f);
+	v[8] = VertexNormal(1.0f, 0.0f, 1.0f, 0.707f, 0.707f, 0.0f);
+	//back
+	v[9] = VertexNormal(1.0f, 0.0f, 1.0f, 0.0f, 0.707f, 0.707f);
+	v[10] = VertexNormal(0.0f, 1.0f, 0.0f, 0.0f, 0.707f, 0.707f);
+	v[11] = VertexNormal(-1.0f, 0.0f, 1.0f, 0.0f, 0.707f, 0.707f);
+	//bottom
+	v[12] = VertexNormal(-1.0f, 0.0f, -1.0f, 0.0f, -4.0f, 0.0f);
+	v[13] = VertexNormal(1.0f, 0.0f, -1.0f, 0.0f, -4.0f, 0.0f);
+	v[14] = VertexNormal(1.0f, 0.0f, 1.0f, 0.0f, -4.0f, 0.0f);
+	v[15] = VertexNormal(1.0f, 0.0f, 1.0f, 0.0f, -4.0f, 0.0f);
+	v[16] = VertexNormal(-1.0f, 0.0f, 1.0f, 0.0f, -4.0f, 0.0f);
+	v[17] = VertexNormal(-1.0f, 0.0f, -1.0f, 0.0f, -4.0f, 0.0f);
+	VB->Unlock();
+
+	//设置材质
+	D3DMATERIAL9 mtrl;
+	mtrl.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//ambient环境光
+	mtrl.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//diffuse漫反射
+	mtrl.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//specular高光
+	mtrl.Emissive = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 0);//emissive自发光
+	mtrl.Power = 5.0f;
+	_device->SetMaterial(&mtrl);
+
+	//方向光(左)
+	D3DLIGHT9 dirLight;
+	::ZeroMemory(&dirLight, sizeof(D3DLIGHT9));
+	dirLight.Type = D3DLIGHT_DIRECTIONAL;
+	dirLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
+	dirLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.3f;
+	dirLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.6f;
+	dirLight.Direction = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+	_device->SetLight(0, &dirLight);
+	_device->LightEnable(0, true);
+
+	//点光源(右)
+	D3DLIGHT9 ptLight;
+	::ZeroMemory(&ptLight, sizeof(D3DLIGHT9));
+	ptLight.Type = D3DLIGHT_POINT;
+	ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0);
+	ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0) * 0.3f;
+	ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0) * 0.6f;
+	ptLight.Position = D3DXVECTOR3(2.0f, 0.0f, 0.0f);
+	ptLight.Range = 2.0f;
+	_device->SetLight(1, &ptLight);
+	_device->LightEnable(1, true);
+
+	//聚光灯(顶)
+	D3DLIGHT9 spotLight;
+	::ZeroMemory(&spotLight, sizeof(D3DLIGHT9));
+	spotLight.Type = D3DLIGHT_SPOT;
+	spotLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 255);
+	spotLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 255) * 0.3f;
+	spotLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 255) * 0.6f;
+	spotLight.Position = D3DXVECTOR3(0.0f, 2.0f, 0.0f);
+	spotLight.Range = 2.0f;
+	spotLight.Falloff = 1.0f;
+	spotLight.Direction = D3DXVECTOR3(0.0f, -1.0f, 0.0f);
+	spotLight.Theta = D3DX_PI / 4;
+	spotLight.Phi = D3DX_PI / 3;
+	_device->SetLight(2, &spotLight);
+	_device->LightEnable(2, true);
+
+	_device->SetRenderState(D3DRS_NORMALIZENORMALS, true);
+	_device->SetRenderState(D3DRS_SPECULARENABLE, true);
+
+	D3DXVECTOR3 position(0.0f, 0.0f, -6.0f);
+	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
+	D3DXMATRIX V;
+	D3DXMatrixLookAtLH(&V, &position, &target, &up);
+	_device->SetTransform(D3DTS_VIEW, &V);
+
+	D3DXMATRIX proj;
+	D3DXMatrixPerspectiveLH(&proj, D3DX_PI * 0.5, (float)_nWidth / (float)_nHeight, 1.0f, 1000.0f);
+	_device->SetTransform(D3DTS_PROJECTION, &proj);
+
+	return TRUE;
+}
+
+BOOL CD3DXDeviceHelper::DisplayLightSample( time_t timeDeta )
+{
+	if (_x > D3DX_PI * 2)
+	{
+		_x = 0.0f;
+	}
+	if (_y > D3DX_PI * 2)
+	{
+		_y = 0.0f;
+	}
+	D3DXMATRIX Rx, Ry;
+	D3DXMatrixRotationX(&Rx, _x);
+	D3DXMatrixRotationY(&Ry, _y);
+	D3DXMATRIX pR = Rx * Ry;
+
+	_device->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER, 0x00000000, 1.0f, 0);
+	_device->BeginScene();
+
+	_device->SetStreamSource(0, VB, 0, sizeof(VertexNormal));
+	_device->SetFVF(VertexNormal::FVF);
+	_device->SetTransform(D3DTS_WORLD, &pR);
+	_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 18);
+
+	_device->EndScene();
+	_device->Present(NULL, NULL, NULL, NULL);
+	return TRUE;
 }

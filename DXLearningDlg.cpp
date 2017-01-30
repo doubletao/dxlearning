@@ -55,7 +55,7 @@ BOOL CDXLearningDlg::OnInitDialog()
 	GetClientRect(rtClient);
 	CD3DXDeviceHelper::Instance().SetBasicInfomation(AfxGetInstanceHandle(), m_hWnd, rtClient.Width(), rtClient.Height(), TRUE);
 	CD3DXDeviceHelper::Instance().InitialD3D();
-	CD3DXDeviceHelper::Instance().Setup();
+	CD3DXDeviceHelper::Instance().SetupLightSample();
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -101,7 +101,8 @@ void CDXLearningDlg::D3DDrawBuffer()
 {
 	if(CD3DXDeviceHelper::Instance().Initialized())
 	{
-		CD3DXDeviceHelper::Instance().Display(clock() - _tLastTime);
+		//CD3DXDeviceHelper::Instance().DisplayColorSample(clock() - _tLastTime);
+		CD3DXDeviceHelper::Instance().DisplayLightSample(clock() - _tLastTime);
 	}
 	_tLastTime = clock();
 }

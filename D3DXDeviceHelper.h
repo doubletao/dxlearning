@@ -34,8 +34,10 @@ public:
 	IDirect3DDevice9 * GetDevice();
 	BOOL Initialized();
 	void SetRotate(float x, float y, float z);
-	BOOL Setup();
-	BOOL Display(time_t timeDeta);
+	BOOL SetupColorSample();
+	BOOL SetupLightSample();
+	BOOL DisplayColorSample(time_t timeDeta);
+	BOOL DisplayLightSample(time_t timeDeta);
 	void Clear();
 };
 
