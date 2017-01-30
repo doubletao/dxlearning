@@ -325,8 +325,8 @@ BOOL CD3DXDeviceHelper::SetupLightSample()
 	::ZeroMemory(&dirLight, sizeof(D3DLIGHT9));
 	dirLight.Type = D3DLIGHT_DIRECTIONAL;
 	dirLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
-	dirLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.3f;
-	dirLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.6f;
+	dirLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
+	dirLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
 	dirLight.Direction = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
 	_device->SetLight(0, &dirLight);
 	_device->LightEnable(0, true);
@@ -336,10 +336,10 @@ BOOL CD3DXDeviceHelper::SetupLightSample()
 	::ZeroMemory(&ptLight, sizeof(D3DLIGHT9));
 	ptLight.Type = D3DLIGHT_POINT;
 	ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0);
-	ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0) * 0.3f;
-	ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0) * 0.6f;
-	ptLight.Position = D3DXVECTOR3(2.0f, 0.0f, 0.0f);
-	ptLight.Range = 2.0f;
+	ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0) * 0.1f;
+	ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0) * 0.0f;
+	ptLight.Position = D3DXVECTOR3(4.0f, 0.0f, 0.0f);
+	ptLight.Range = 8.0f;
 	_device->SetLight(1, &ptLight);
 	_device->LightEnable(1, true);
 
@@ -348,14 +348,14 @@ BOOL CD3DXDeviceHelper::SetupLightSample()
 	::ZeroMemory(&spotLight, sizeof(D3DLIGHT9));
 	spotLight.Type = D3DLIGHT_SPOT;
 	spotLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 255);
-	spotLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 255) * 0.3f;
-	spotLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 255) * 0.6f;
+	spotLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 255) * 0.1f;
+	spotLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 255) * 0.0f;
 	spotLight.Position = D3DXVECTOR3(0.0f, 2.0f, 0.0f);
-	spotLight.Range = 2.0f;
-	spotLight.Falloff = 1.0f;
+	spotLight.Range = 8.0f;
+	spotLight.Falloff = 2.0f;
 	spotLight.Direction = D3DXVECTOR3(0.0f, -1.0f, 0.0f);
-	spotLight.Theta = D3DX_PI / 4;
-	spotLight.Phi = D3DX_PI / 3;
+	spotLight.Theta = D3DX_PI / 3;
+	spotLight.Phi = D3DX_PI / 2;
 	_device->SetLight(2, &spotLight);
 	_device->LightEnable(2, true);
 
@@ -396,8 +396,25 @@ BOOL CD3DXDeviceHelper::DisplayLightSample( time_t timeDeta )
 
 	_device->SetStreamSource(0, VB, 0, sizeof(VertexNormal));
 	_device->SetFVF(VertexNormal::FVF);
-	_device->SetTransform(D3DTS_WORLD, &pR);
-	_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 18);
+
+	{
+		D3DXMATRIX Pos;
+		D3DXMatrixTranslation(&Pos, 2.0f, 0.0f, 0.0f);
+		pR *= Pos;
+		_device->SetTransform(D3DTS_WORLD, &pR);
+		_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 18);
+	}
+
+	{
+		D3DXMATRIX Pos;
+		D3DXMatrixTranslation(&Pos, -3.0f, 0.0f, 0.0f);
+		pR *= Pos;
+		_device->SetTransform(D3DTS_WORLD, &pR);
+		ID3DXMesh * teaPot = NULL;
+		D3DXCreateTeapot(_device, &teaPot, NULL);
+		teaPot->DrawSubset(0);
+		ReleaseObject<ID3DXMesh *>(teaPot);
+	}
 
 	_device->EndScene();
 	_device->Present(NULL, NULL, NULL, NULL);
