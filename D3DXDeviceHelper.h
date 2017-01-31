@@ -23,8 +23,11 @@ private:
 	IDirect3DDevice9 * _device;//…Ë±∏÷∏’Î
 	IDirect3DVertexBuffer9 * VB;
 	IDirect3DIndexBuffer9 * IB;
+	IDirect3DTexture9 * _Tex;
 
 	BOOL bInitialized;
+public:
+	static D3DXVECTOR3 CalNormalVec3(D3DXVECTOR3 v1, D3DXVECTOR3 v2, D3DXVECTOR3 v3);
 public:
 	void SetBasicInfomation(HINSTANCE hInst, HWND hWnd, int nWidth, int nHeight, BOOL bWindowed);
 	BOOL InitialD3D();
@@ -36,8 +39,10 @@ public:
 	void SetRotate(float x, float y, float z);
 	BOOL SetupColorSample();
 	BOOL SetupLightSample();
+	BOOL SetupTextureSample();
 	BOOL DisplayColorSample(time_t timeDeta);
 	BOOL DisplayLightSample(time_t timeDeta);
+	BOOL DisplayTextureSample(time_t timeDeta);
 	void Clear();
 };
 

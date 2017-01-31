@@ -35,6 +35,24 @@ struct VertexNormal
 };
 const WORD VertexNormal::FVF = D3DFVF_XYZ | D3DFVF_NORMAL;
 
+struct VertexTexture
+{
+	float _x;
+	float _y;
+	float _z;
+	float _nx;
+	float _ny;
+	float _nz;
+	float _u;
+	float _v;
+	VertexTexture(){}
+	VertexTexture(float x, float y, float z, float nx, float ny, float nz, float u, float v)
+		: _x(x), _y(y), _z(z), _nx(nx), _ny(ny), _nz(nz), _u(u), _v(v)
+	{}
+	static const WORD FVF;
+};
+const WORD VertexTexture::FVF = D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1;
+
 CD3DXDeviceHelper & CD3DXDeviceHelper::Instance()
 {
 	static CD3DXDeviceHelper instance;
@@ -55,6 +73,7 @@ CD3DXDeviceHelper::CD3DXDeviceHelper(void)
 	, IB(NULL)
 	, _x(0.0f)
 	, _y(0.0f)
+	, _Tex(NULL)
 {
 	memset(&_cap9, 0, sizeof(D3DCAPS9));
 	memset(&_d3dParam, 0, sizeof(D3DPRESENT_PARAMETERS));
@@ -419,4 +438,94 @@ BOOL CD3DXDeviceHelper::DisplayLightSample( time_t timeDeta )
 	_device->EndScene();
 	_device->Present(NULL, NULL, NULL, NULL);
 	return TRUE;
+}
+
+BOOL CD3DXDeviceHelper::SetupTextureSample()
+{
+	_device->CreateVertexBuffer(12 * sizeof(VertexTexture), D3DUSAGE_WRITEONLY, VertexTexture::FVF, D3DPOOL_MANAGED, &VB, NULL);
+	VertexTexture * v;
+	VB->Lock(0, 0, (void **)&v, 0);
+
+	v[0] = VertexTexture(-2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
+	v[1] = VertexTexture(-2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
+	v[2] = VertexTexture(2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
+	v[3] = VertexTexture(-2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
+	v[4] = VertexTexture(2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
+	v[5] = VertexTexture(2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f);
+
+	v[8] = VertexTexture(-2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
+	v[7] = VertexTexture(-2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
+	v[6] = VertexTexture(2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
+	v[11] = VertexTexture(-2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
+	v[10] = VertexTexture(2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
+	v[9] = VertexTexture(2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f);
+
+	VB->Unlock();
+
+	D3DXCreateTextureFromFile(_device, _T("D:\\DXLearning\\pic\\1.jpg"), &_Tex);
+	_device->SetTexture(0, _Tex);
+
+	_device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
+	_device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
+	_device->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_ANISOTROPIC);
+
+	_device->SetRenderState(D3DRS_LIGHTING, false);
+
+	D3DXVECTOR3 position(0.0f, 0.0f, -6.0f);
+	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
+	D3DXMATRIX V;
+	D3DXMatrixLookAtLH(&V, &position, &target, &up);
+	_device->SetTransform(D3DTS_VIEW, &V);
+
+	D3DXMATRIX proj;
+	D3DXMatrixPerspectiveLH(&proj, D3DX_PI * 0.5, (float)_nWidth / (float)_nHeight, 1.0f, 1000.0f);
+	_device->SetTransform(D3DTS_PROJECTION, &proj);
+
+
+
+	return TRUE;
+}
+
+BOOL CD3DXDeviceHelper::DisplayTextureSample( time_t timeDeta )
+{
+	if (_device)
+	{
+		if (_x > D3DX_PI * 2)
+		{
+			_x = 0.0f;
+		}
+		if (_y > D3DX_PI * 2)
+		{
+			_y = 0.0f;
+		}
+		D3DXMATRIX Rx, Ry;
+		D3DXMatrixRotationX(&Rx, _x);
+		D3DXMatrixRotationY(&Ry, _y);
+		D3DXMATRIX pR = Rx * Ry;
+		D3DXMATRIX Pos;
+		D3DXMatrixTranslation(&Pos, 0.0f, 0.0f, 0.0f);
+		pR *= Pos;
+		_device->SetTransform(D3DTS_WORLD, &pR);
+
+		_device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET | D3DCLEAR_STENCIL, 0xffffffff, 1.0f, 0);
+		_device->BeginScene();
+
+		_device->SetStreamSource(0, VB, 0, sizeof(VertexTexture));
+		_device->SetFVF(VertexTexture::FVF);
+		_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 4);
+		_device->EndScene();
+
+		_device->Present(NULL, NULL, 0, NULL);
+	}
+	return TRUE;
+}
+
+D3DXVECTOR3 CD3DXDeviceHelper::CalNormalVec3( D3DXVECTOR3 v1, D3DXVECTOR3 v2, D3DXVECTOR3 v3 )
+{
+	D3DXVECTOR3 vN(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 vF = v2 - v1;
+	D3DXVECTOR3 vS = v3 - v1;
+	D3DXVec3Cross(&vN, &vF, &vS);
+	return vN;
 }
