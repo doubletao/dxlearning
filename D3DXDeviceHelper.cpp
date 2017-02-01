@@ -446,30 +446,60 @@ BOOL CD3DXDeviceHelper::SetupTextureSample()
 	VertexTexture * v;
 	VB->Lock(0, 0, (void **)&v, 0);
 
-	v[0] = VertexTexture(-2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
-	v[1] = VertexTexture(-2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
-	v[2] = VertexTexture(2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
-	v[3] = VertexTexture(-2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
-	v[4] = VertexTexture(2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
-	v[5] = VertexTexture(2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f);
+	v[0] = VertexTexture(-2.36f, -4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
+	v[1] = VertexTexture(-2.36f, 4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
+	v[2] = VertexTexture(2.36f, 4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
+	v[3] = VertexTexture(-2.36f, -4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
+	v[4] = VertexTexture(2.36f, 4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
+	v[5] = VertexTexture(2.36f, -4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f);
 
-	v[8] = VertexTexture(-2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
-	v[7] = VertexTexture(-2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
-	v[6] = VertexTexture(2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
-	v[11] = VertexTexture(-2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
-	v[10] = VertexTexture(2.36f, 4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
-	v[9] = VertexTexture(2.36f, -4.208f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f);
+	v[8] = VertexTexture(-2.36f, -4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
+	v[7] = VertexTexture(-2.36f, 4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
+	v[6] = VertexTexture(2.36f, 4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
+	v[11] = VertexTexture(-2.36f, -4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
+	v[10] = VertexTexture(2.36f, 4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
+	v[9] = VertexTexture(2.36f, -4.208f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f);
 
 	VB->Unlock();
 
 	D3DXCreateTextureFromFile(_device, _T("D:\\DXLearning\\pic\\1.jpg"), &_Tex);
-	_device->SetTexture(0, _Tex);
 
 	_device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
 	_device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
 	_device->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_ANISOTROPIC);
+	
+	_device->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+	_device->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+	_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+	_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 
-	_device->SetRenderState(D3DRS_LIGHTING, false);
+	{
+		//点光源(前)
+		D3DLIGHT9 ptLight;
+		::ZeroMemory(&ptLight, sizeof(D3DLIGHT9));
+		ptLight.Type = D3DLIGHT_POINT;
+		ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
+		ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
+		ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
+		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, -2.0f);
+		ptLight.Range = 8.0f;
+		_device->SetLight(0, &ptLight);
+		_device->LightEnable(0, true);
+	}
+
+	{
+		//点光源(后)
+		D3DLIGHT9 ptLight;
+		::ZeroMemory(&ptLight, sizeof(D3DLIGHT9));
+		ptLight.Type = D3DLIGHT_POINT;
+		ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
+		ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
+		ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
+		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, 2.0f);
+		ptLight.Range = 8.0f;
+		_device->SetLight(1, &ptLight);
+		_device->LightEnable(1, true);
+	}
 
 	D3DXVECTOR3 position(0.0f, 0.0f, -6.0f);
 	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
@@ -481,8 +511,6 @@ BOOL CD3DXDeviceHelper::SetupTextureSample()
 	D3DXMATRIX proj;
 	D3DXMatrixPerspectiveLH(&proj, D3DX_PI * 0.5, (float)_nWidth / (float)_nHeight, 1.0f, 1000.0f);
 	_device->SetTransform(D3DTS_PROJECTION, &proj);
-
-
 
 	return TRUE;
 }
@@ -503,17 +531,55 @@ BOOL CD3DXDeviceHelper::DisplayTextureSample( time_t timeDeta )
 		D3DXMatrixRotationX(&Rx, _x);
 		D3DXMatrixRotationY(&Ry, _y);
 		D3DXMATRIX pR = Rx * Ry;
-		D3DXMATRIX Pos;
-		D3DXMatrixTranslation(&Pos, 0.0f, 0.0f, 0.0f);
-		pR *= Pos;
-		_device->SetTransform(D3DTS_WORLD, &pR);
 
 		_device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET | D3DCLEAR_STENCIL, 0xffffffff, 1.0f, 0);
 		_device->BeginScene();
 
 		_device->SetStreamSource(0, VB, 0, sizeof(VertexTexture));
 		_device->SetFVF(VertexTexture::FVF);
-		_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 4);
+
+		{
+			_device->SetRenderState(D3DRS_LIGHTING, true);
+			D3DXMATRIX Pos;
+			D3DXMatrixTranslation(&Pos, 0.0f, 0.0f, 0.0f);
+			pR *= Pos;
+			_device->SetTransform(D3DTS_WORLD, &pR);
+			//设置材质
+			D3DMATERIAL9 mtrl;
+			mtrl.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//ambient环境光
+			mtrl.Diffuse = (D3DXCOLOR)D3DCOLOR_ARGB(255, 255, 255, 255);//diffuse漫反射
+			mtrl.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//specular高光
+			mtrl.Emissive = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 0);//emissive自发光
+			mtrl.Power = 5.0f;
+			_device->SetMaterial(&mtrl);
+			_device->SetTexture(0, _Tex);
+			_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 4);
+		}
+
+		{
+			_device->SetRenderState(D3DRS_LIGHTING, true);
+			_device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+			D3DXMATRIX Pos;
+			D3DXMatrixTranslation(&Pos, 0.0f, 0.0f, 0.0f);
+			pR *= Pos;
+			_device->SetTransform(D3DTS_WORLD, &pR);
+			//设置材质
+			D3DMATERIAL9 mtrl;
+			mtrl.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0);//ambient环境光
+			mtrl.Diffuse = (D3DXCOLOR)D3DCOLOR_ARGB(128, 255, 0, 0);//diffuse漫反射
+			mtrl.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0);//specular高光
+			mtrl.Emissive = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0);//emissive自发光
+			mtrl.Power = 5.0f;
+			_device->SetMaterial(&mtrl);
+			_device->SetTexture(0, 0);
+			
+			ID3DXMesh * pMesh = NULL;
+			D3DXCreateTeapot(_device, &pMesh, NULL);
+			pMesh->DrawSubset(0);
+
+			_device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+		}
+
 		_device->EndScene();
 
 		_device->Present(NULL, NULL, 0, NULL);
