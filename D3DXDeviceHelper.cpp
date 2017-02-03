@@ -74,6 +74,8 @@ CD3DXDeviceHelper::CD3DXDeviceHelper(void)
 	, _x(0.0f)
 	, _y(0.0f)
 	, _Tex(NULL)
+	, _TexWall(NULL)
+	, _TexFloor(NULL)
 {
 	memset(&_cap9, 0, sizeof(D3DCAPS9));
 	memset(&_d3dParam, 0, sizeof(D3DPRESENT_PARAMETERS));
@@ -566,7 +568,7 @@ BOOL CD3DXDeviceHelper::DisplayTextureSample( time_t timeDeta )
 			//设置材质
 			D3DMATERIAL9 mtrl;
 			mtrl.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0);//ambient环境光
-			mtrl.Diffuse = (D3DXCOLOR)D3DCOLOR_ARGB(128, 255, 0, 0);//diffuse漫反射
+			mtrl.Diffuse = (D3DXCOLOR)D3DCOLOR_ARGB(200, 255, 0, 0);//diffuse漫反射
 			mtrl.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0);//specular高光
 			mtrl.Emissive = (D3DXCOLOR)D3DCOLOR_XRGB(255, 0, 0);//emissive自发光
 			mtrl.Power = 5.0f;
@@ -574,7 +576,7 @@ BOOL CD3DXDeviceHelper::DisplayTextureSample( time_t timeDeta )
 			_device->SetTexture(0, 0);
 			
 			ID3DXMesh * pMesh = NULL;
-			D3DXCreateTeapot(_device, &pMesh, NULL);
+			D3DXCreateCylinder(_device, 1.0f, 1.3f, 1.5f, 8, 4, &pMesh, NULL);
 			pMesh->DrawSubset(0);
 
 			_device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
@@ -594,4 +596,131 @@ D3DXVECTOR3 CD3DXDeviceHelper::CalNormalVec3( D3DXVECTOR3 v1, D3DXVECTOR3 v2, D3
 	D3DXVECTOR3 vS = v3 - v1;
 	D3DXVec3Cross(&vN, &vF, &vS);
 	return vN;
+}
+
+BOOL CD3DXDeviceHelper::SetupMirrorSample()
+{
+	//加载纹理
+	D3DXCreateTextureFromFile(_device, _T("D:\\DXLearning\\pic\\wall.jpg"), &_TexWall);
+	D3DXCreateTextureFromFile(_device, _T("D:\\DXLearning\\pic\\floor.jpg"), &_TexFloor);
+
+	//开灯
+	_device->SetRenderState(D3DRS_LIGHTING, true);
+
+	//设置灯光
+	{
+		//点光源(前)
+		D3DLIGHT9 ptLight;
+		::ZeroMemory(&ptLight, sizeof(D3DLIGHT9));
+		ptLight.Type = D3DLIGHT_POINT;
+		ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
+		ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
+		ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
+		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, -6.0f);
+		ptLight.Range = 9.0f;
+		_device->SetLight(0, &ptLight);
+		_device->LightEnable(0, true);
+	}
+
+	//设定摄像机矩阵
+	D3DXMATRIX camera;
+	D3DXVECTOR3 position(-4.0f, 2.0f, -7.0f);
+	D3DXVECTOR3 lookat(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
+	D3DXMatrixLookAtLH(&camera, &position, &lookat, &up);
+	_device->SetTransform(D3DTS_VIEW, &camera);
+
+	_device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
+	_device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
+	_device->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_ANISOTROPIC);
+
+	//设定投影矩阵
+	D3DXMATRIX proj;
+	D3DXMatrixPerspectiveLH(&proj, D3DX_PI * 0.5, float(_nWidth) / float(_nHeight), 1.0f, 1000.0f);
+	_device->SetTransform(D3DTS_PROJECTION, &proj);
+
+	return TRUE;
+}
+
+BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
+{
+	_x = 0.0f;
+	//旋转逻辑
+	if (_x > D3DX_PI * 2)
+	{
+		_x = 0.0f;
+	}
+	if (_y > D3DX_PI * 2)
+	{
+		_y = 0.0f;
+	}
+	D3DXMATRIX Rx, Ry;
+	D3DXMatrixRotationX(&Rx, _x);
+	D3DXMatrixRotationY(&Ry, _y);
+	D3DXMATRIX pR = Rx * Ry;
+
+	_device->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER, 0xff00ff00, 1.0f, 0);
+	_device->BeginScene();
+
+	//画墙和地板
+	{
+		//墙的材质
+		D3DMATERIAL9 mtrWall;
+		mtrWall.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//ambient环境光
+		mtrWall.Diffuse = (D3DXCOLOR)D3DCOLOR_ARGB(255, 255, 255, 255);//diffuse漫反射
+		mtrWall.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//specular高光
+		mtrWall.Emissive = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 0);//emissive自发光
+		mtrWall.Power = 5.0f;
+		_device->SetMaterial(&mtrWall);
+		//墙的纹理
+		_device->SetTexture(0, _TexWall);
+		//墙的矩阵
+		D3DXMATRIX pos;
+		D3DXMatrixTranslation(&pos, 0.0f, 2.0f, 0.0f);
+		pos = pR * pos;
+		_device->SetTransform(D3DTS_WORLD, &pos);
+		//画墙
+		ID3DXMesh * pMeshWall = NULL;
+		D3DXCreateBox(_device, 8.0f, 5.0f, 0.1f, &pMeshWall, NULL);
+		pMeshWall->DrawSubset(0);
+	}
+
+	{
+		//地板的材质
+		D3DMATERIAL9 mtrFloor;
+		mtrFloor.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//ambient环境光
+		mtrFloor.Diffuse = (D3DXCOLOR)D3DCOLOR_ARGB(255, 255, 255, 255);//diffuse漫反射
+		mtrFloor.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//specular高光
+		mtrFloor.Emissive = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 0);//emissive自发光
+		mtrFloor.Power = 5.0f;
+		_device->SetMaterial(&mtrFloor);
+		//地板的纹理
+		_device->SetTexture(0, _TexFloor);
+		//地板的矩阵
+		float x1 = _x + D3DX_PI * 0.5;
+		if (x1 > D3DX_PI * 2)
+		{
+			x1 = 0.0f;
+		}
+		D3DXMATRIX Rx, Ry;
+		D3DXMatrixRotationX(&Rx, x1);
+		D3DXMatrixRotationY(&Ry, _y);
+		D3DXMATRIX pR = Rx * Ry;
+		D3DXMATRIX pos;
+		D3DXMatrixTranslation(&pos, 0.0f, -0.5f, 0.0f);
+		pos = pR * pos;
+		_device->SetTransform(D3DTS_WORLD, &pos);
+		//画地板
+		ID3DXMesh * pMeshWall = NULL;
+		D3DXCreateBox(_device, 8.0f, 5.0f, 0.1f, &pMeshWall, NULL);
+		pMeshWall->DrawSubset(0);
+	}
+
+	{
+		//画个镜子
+	}
+	_device->EndScene();
+	_device->Present(NULL, NULL, 0, NULL);
+
+	return TRUE;
 }

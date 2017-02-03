@@ -24,6 +24,8 @@ private:
 	IDirect3DVertexBuffer9 * VB;
 	IDirect3DIndexBuffer9 * IB;
 	IDirect3DTexture9 * _Tex;
+	IDirect3DTexture9 * _TexWall;
+	IDirect3DTexture9 * _TexFloor;
 
 	BOOL bInitialized;
 public:
@@ -40,9 +42,11 @@ public:
 	BOOL SetupColorSample();
 	BOOL SetupLightSample();
 	BOOL SetupTextureSample();
+	BOOL SetupMirrorSample();
 	BOOL DisplayColorSample(time_t timeDeta);
 	BOOL DisplayLightSample(time_t timeDeta);
 	BOOL DisplayTextureSample(time_t timeDeta);
+	BOOL DisplayMirrorSample(time_t timeDeta);
 	void Clear();
 };
 
