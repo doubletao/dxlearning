@@ -617,7 +617,7 @@ BOOL CD3DXDeviceHelper::SetupMirrorSample()
 		ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
 		ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
 		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, -6.0f);
-		ptLight.Range = 9.0f;
+		ptLight.Range = 10.0f;
 		_device->SetLight(0, &ptLight);
 		_device->LightEnable(0, true);
 	}
@@ -644,7 +644,6 @@ BOOL CD3DXDeviceHelper::SetupMirrorSample()
 
 BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
 {
-	_x = 0.0f;
 	//旋转逻辑
 	if (_x > D3DX_PI * 2)
 	{
@@ -659,7 +658,7 @@ BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
 	D3DXMatrixRotationY(&Ry, _y);
 	D3DXMATRIX pR = Rx * Ry;
 
-	_device->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER, 0xff00ff00, 1.0f, 0);
+	_device->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER, 0xff000000, 1.0f, 0);
 	_device->BeginScene();
 
 	//画墙和地板
@@ -716,8 +715,36 @@ BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
 		pMeshWall->DrawSubset(0);
 	}
 
+	//画个镜子
 	{
-		//画个镜子
+		//镜子的材质
+		D3DMATERIAL9 mtrMirror;
+		mtrMirror.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//ambient环境光
+		mtrMirror.Diffuse = (D3DXCOLOR)D3DCOLOR_ARGB(255, 255, 255, 255);//diffuse漫反射
+		mtrMirror.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);//specular高光
+		mtrMirror.Emissive = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 0);//emissive自发光
+		mtrMirror.Power = 5.0f;
+		_device->SetMaterial(&mtrMirror);
+		//镜子的纹理
+		_device->SetTexture(0, 0);
+		//镜子的矩阵
+		float x1 = _x;
+		if (x1 > D3DX_PI * 2)
+		{
+			x1 = 0.0f;
+		}
+		D3DXMATRIX Rx, Ry;
+		D3DXMatrixRotationX(&Rx, x1);
+		D3DXMatrixRotationY(&Ry, _y);
+		D3DXMATRIX pR = Rx * Ry;
+		D3DXMATRIX pos;
+		D3DXMatrixTranslation(&pos, 0.0f, 2.0f, -0.1f);
+		pos = pR * pos;
+		_device->SetTransform(D3DTS_WORLD, &pos);
+		//画镜子
+		ID3DXMesh * pMeshWall = NULL;
+		D3DXCreateBox(_device, 4.0f, 4.0f, 0.05f, &pMeshWall, NULL);
+		pMeshWall->DrawSubset(0);
 	}
 	_device->EndScene();
 	_device->Present(NULL, NULL, 0, NULL);
