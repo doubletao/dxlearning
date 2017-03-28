@@ -12,8 +12,12 @@ private:
 	int _nHeight;
 	BOOL _bWindowed;
 
-	float _x; 
-	float _y;
+	float _xObj; //物件的x旋转
+	float _yObj; //物件的y旋转
+
+	float _xCamera; //摄像机的x旋转
+	float _yCamera; //摄像机的y旋转
+	float _zCamera; //摄像机的y旋转
 
 	//D3D成员
 	IDirect3D9 * _d3d9;//接口指针
@@ -39,6 +43,7 @@ public:
 	IDirect3DDevice9 * GetDevice();
 	BOOL Initialized();
 	void SetRotate(float x, float y, float z);
+	void RotateCamera(float x, float y, float z);
 	BOOL SetupColorSample();
 	BOOL SetupLightSample();
 	BOOL SetupTextureSample();

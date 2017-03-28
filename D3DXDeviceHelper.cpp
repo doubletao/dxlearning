@@ -71,11 +71,14 @@ CD3DXDeviceHelper::CD3DXDeviceHelper(void)
 	, bInitialized(FALSE)
 	, VB(NULL)
 	, IB(NULL)
-	, _x(0.0f)
-	, _y(0.0f)
+	, _xObj(0.0f)
+	, _yObj(0.0f)
 	, _Tex(NULL)
 	, _TexWall(NULL)
 	, _TexFloor(NULL)
+	, _xCamera(0) //摄像机的x旋转
+	, _yCamera(0) //摄像机的y旋转
+	, _zCamera(0) //摄像机的y旋转
 {
 	memset(&_cap9, 0, sizeof(D3DCAPS9));
 	memset(&_d3dParam, 0, sizeof(D3DPRESENT_PARAMETERS));
@@ -229,17 +232,17 @@ BOOL CD3DXDeviceHelper::SetupColorSample()
 
 BOOL CD3DXDeviceHelper::DisplayColorSample( time_t timeDeta )
 {
-	if (_x > D3DX_PI * 2)
+	if (_xObj > D3DX_PI * 2)
 	{
-		_x = 0.0f;
+		_xObj = 0.0f;
 	}
-	if (_y > D3DX_PI * 2)
+	if (_yObj > D3DX_PI * 2)
 	{
-		_y = 0.0f;
+		_yObj = 0.0f;
 	}
 	D3DXMATRIX Rx, Ry, P;
-	D3DXMatrixRotationX(&Rx, _x);
-	D3DXMatrixRotationY(&Ry, _y);
+	D3DXMatrixRotationX(&Rx, _xObj);
+	D3DXMatrixRotationY(&Ry, _yObj);
 	D3DXMATRIX pR = Rx * Ry;
 
 	CD3DXDeviceHelper::Instance().GetDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL,
@@ -281,8 +284,14 @@ void CD3DXDeviceHelper::Clear()
 
 void CD3DXDeviceHelper::SetRotate( float x, float y, float z )
 {
-	_x = x;
-	_y = y;
+	_xObj = x;
+	_yObj = y;
+}
+
+void CD3DXDeviceHelper::RotateCamera(float x, float y, float z)
+{
+	_xCamera = x;
+	_yCamera = y;
 }
 
 BOOL CD3DXDeviceHelper::SetupLightSample()
@@ -399,17 +408,17 @@ BOOL CD3DXDeviceHelper::SetupLightSample()
 
 BOOL CD3DXDeviceHelper::DisplayLightSample( time_t timeDeta )
 {
-	if (_x > D3DX_PI * 2)
+	if (_xObj > D3DX_PI * 2)
 	{
-		_x = 0.0f;
+		_xObj = 0.0f;
 	}
-	if (_y > D3DX_PI * 2)
+	if (_yObj > D3DX_PI * 2)
 	{
-		_y = 0.0f;
+		_yObj = 0.0f;
 	}
 	D3DXMATRIX Rx, Ry;
-	D3DXMatrixRotationX(&Rx, _x);
-	D3DXMatrixRotationY(&Ry, _y);
+	D3DXMatrixRotationX(&Rx, _xObj);
+	D3DXMatrixRotationY(&Ry, _yObj);
 	D3DXMATRIX pR = Rx * Ry;
 
 	_device->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER, 0x00000000, 1.0f, 0);
@@ -521,17 +530,17 @@ BOOL CD3DXDeviceHelper::DisplayTextureSample( time_t timeDeta )
 {
 	if (_device)
 	{
-		if (_x > D3DX_PI * 2)
+		if (_xObj > D3DX_PI * 2)
 		{
-			_x = 0.0f;
+			_xObj = 0.0f;
 		}
-		if (_y > D3DX_PI * 2)
+		if (_yObj > D3DX_PI * 2)
 		{
-			_y = 0.0f;
+			_yObj = 0.0f;
 		}
 		D3DXMATRIX Rx, Ry;
-		D3DXMatrixRotationX(&Rx, _x);
-		D3DXMatrixRotationY(&Ry, _y);
+		D3DXMatrixRotationX(&Rx, _xObj);
+		D3DXMatrixRotationY(&Ry, _yObj);
 		D3DXMATRIX pR = Rx * Ry;
 
 		_device->Clear(0, 0, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET | D3DCLEAR_STENCIL, 0xffffffff, 1.0f, 0);
@@ -622,13 +631,20 @@ BOOL CD3DXDeviceHelper::SetupMirrorSample()
 		_device->LightEnable(0, true);
 	}
 
-	//设定摄像机矩阵
-	D3DXMATRIX camera;
-	D3DXVECTOR3 position(-4.0f, 2.0f, -7.0f);
-	D3DXVECTOR3 lookat(0.0f, 0.0f, 0.0f);
-	D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
-	D3DXMatrixLookAtLH(&camera, &position, &lookat, &up);
-	_device->SetTransform(D3DTS_VIEW, &camera);
+	//设置灯光
+	{
+		//点光源(后)
+		D3DLIGHT9 ptLight;
+		::ZeroMemory(&ptLight, sizeof(D3DLIGHT9));
+		ptLight.Type = D3DLIGHT_POINT;
+		ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
+		ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
+		ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
+		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, 6.0f);
+		ptLight.Range = 10.0f;
+		_device->SetLight(1, &ptLight);
+		_device->LightEnable(1, true);
+	}
 
 	_device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
 	_device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
@@ -645,17 +661,31 @@ BOOL CD3DXDeviceHelper::SetupMirrorSample()
 BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
 {
 	//旋转逻辑
-	if (_x > D3DX_PI * 2)
+	if (_xObj > D3DX_PI * 2)
 	{
-		_x = 0.0f;
+		_xObj = 0.0f;
 	}
-	if (_y > D3DX_PI * 2)
+	if (_yObj > D3DX_PI * 2)
 	{
-		_y = 0.0f;
+		_yObj = 0.0f;
 	}
+
+	//计算摄像机矩阵
+	float fDistance = 7.0f;
+	float fXCamera = sin(_xCamera) * cos(_yCamera) * fDistance;
+	float fYCamera = sin(_yCamera) * fDistance;
+	float fZCamera = -cos(_xCamera) * cos(_yCamera) * fDistance;
+	//设定摄像机矩阵
+	D3DXMATRIX camera;
+	D3DXVECTOR3 position(fXCamera, fYCamera, fZCamera);
+	D3DXVECTOR3 lookat(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
+	D3DXMatrixLookAtLH(&camera, &position, &lookat, &up);
+	_device->SetTransform(D3DTS_VIEW, &camera);
+
 	D3DXMATRIX Rx, Ry;
-	D3DXMatrixRotationX(&Rx, _x);
-	D3DXMatrixRotationY(&Ry, _y);
+	D3DXMatrixRotationX(&Rx, _xObj);
+	D3DXMatrixRotationY(&Ry, _yObj);
 	D3DXMATRIX pR = Rx * Ry;
 
 	_device->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER, 0xff000000, 1.0f, 0);
@@ -696,14 +726,14 @@ BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
 		//地板的纹理
 		_device->SetTexture(0, _TexFloor);
 		//地板的矩阵
-		float x1 = _x + D3DX_PI * 0.5;
+		float x1 = _xObj + D3DX_PI * 0.5;
 		if (x1 > D3DX_PI * 2)
 		{
 			x1 = 0.0f;
 		}
 		D3DXMATRIX Rx, Ry;
 		D3DXMatrixRotationX(&Rx, x1);
-		D3DXMatrixRotationY(&Ry, _y);
+		D3DXMatrixRotationY(&Ry, _yObj);
 		D3DXMATRIX pR = Rx * Ry;
 		D3DXMATRIX pos;
 		D3DXMatrixTranslation(&pos, 0.0f, -0.5f, 0.0f);
@@ -728,14 +758,14 @@ BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
 		//镜子的纹理
 		_device->SetTexture(0, 0);
 		//镜子的矩阵
-		float x1 = _x;
+		float x1 = _xObj;
 		if (x1 > D3DX_PI * 2)
 		{
 			x1 = 0.0f;
 		}
 		D3DXMATRIX Rx, Ry;
 		D3DXMatrixRotationX(&Rx, x1);
-		D3DXMatrixRotationY(&Ry, _y);
+		D3DXMatrixRotationY(&Ry, _yObj);
 		D3DXMATRIX pR = Rx * Ry;
 		D3DXMATRIX pos;
 		D3DXMatrixTranslation(&pos, 0.0f, 2.0f, -0.1f);
