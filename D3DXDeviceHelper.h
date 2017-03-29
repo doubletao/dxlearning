@@ -19,6 +19,8 @@ private:
 	float _yCamera; //摄像机的y旋转
 	float _zCamera; //摄像机的y旋转
 
+	float _distanceCamera;
+
 	//D3D成员
 	IDirect3D9 * _d3d9;//接口指针
 	D3DCAPS9 _cap9;//显卡支持属性集
@@ -44,6 +46,10 @@ public:
 	BOOL Initialized();
 	void SetRotate(float x, float y, float z);
 	void RotateCamera(float x, float y, float z);
+	void SetCameraDistance(float fDis);
+	void GetRotate(float &x, float &y, float &z);
+	void GetRotateCamera(float &x, float &y, float &z);
+	void GetCameraDistance(float &fDis);
 	BOOL SetupColorSample();
 	BOOL SetupLightSample();
 	BOOL SetupTextureSample();

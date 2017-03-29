@@ -79,6 +79,7 @@ CD3DXDeviceHelper::CD3DXDeviceHelper(void)
 	, _xCamera(0) //摄像机的x旋转
 	, _yCamera(0) //摄像机的y旋转
 	, _zCamera(0) //摄像机的y旋转
+	, _distanceCamera(7.0f)
 {
 	memset(&_cap9, 0, sizeof(D3DCAPS9));
 	memset(&_d3dParam, 0, sizeof(D3DPRESENT_PARAMETERS));
@@ -286,12 +287,6 @@ void CD3DXDeviceHelper::SetRotate( float x, float y, float z )
 {
 	_xObj = x;
 	_yObj = y;
-}
-
-void CD3DXDeviceHelper::RotateCamera(float x, float y, float z)
-{
-	_xCamera = x;
-	_yCamera = y;
 }
 
 BOOL CD3DXDeviceHelper::SetupLightSample()
@@ -671,15 +666,19 @@ BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
 	}
 
 	//计算摄像机矩阵
-	float fDistance = 7.0f;
-	float fXCamera = sin(_xCamera) * cos(_yCamera) * fDistance;
-	float fYCamera = sin(_yCamera) * fDistance;
-	float fZCamera = -cos(_xCamera) * cos(_yCamera) * fDistance;
+	float fXCamera = sin(_xCamera) * cos(_yCamera) * _distanceCamera;
+	float fYCamera = sin(_yCamera) * _distanceCamera;
+	float fZCamera = -cos(_xCamera) * cos(_yCamera) * _distanceCamera;
 	//设定摄像机矩阵
 	D3DXMATRIX camera;
 	D3DXVECTOR3 position(fXCamera, fYCamera, fZCamera);
 	D3DXVECTOR3 lookat(0.0f, 0.0f, 0.0f);
-	D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
+	float fUp = 1.0f;
+	if(_yCamera > D3DX_PI / 2 || D3DX_PI < -D3DX_PI / 2)
+	{
+		fUp = -1.0f;
+	}
+	D3DXVECTOR3 up(0.0f, fUp, 0.0f);
 	D3DXMatrixLookAtLH(&camera, &position, &lookat, &up);
 	_device->SetTransform(D3DTS_VIEW, &camera);
 
@@ -781,3 +780,34 @@ BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
 
 	return TRUE;
 }
+
+void CD3DXDeviceHelper::SetCameraDistance( float fDis )
+{
+	_distanceCamera = fDis;
+}
+
+void CD3DXDeviceHelper::GetRotate( float &x, float &y, float &z )
+{
+	x = _xObj;
+	y = _yObj;
+	z = 0.0f;
+}
+
+void CD3DXDeviceHelper::RotateCamera(float x, float y, float z)
+{
+	_xCamera = x;
+	_yCamera = y;
+}
+
+void CD3DXDeviceHelper::GetRotateCamera( float &x, float &y, float &z )
+{
+	x = _xCamera;
+	y = _yCamera;
+	z = _zCamera;
+}
+
+void CD3DXDeviceHelper::GetCameraDistance( float &fDis )
+{
+	fDis = _distanceCamera;
+}
+

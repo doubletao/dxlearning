@@ -36,6 +36,7 @@ BEGIN_MESSAGE_MAP(CDXLearningDlg, CDialogEx)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONUP()
+	ON_WM_MOUSEWHEEL()
 END_MESSAGE_MAP()
 
 
@@ -123,13 +124,14 @@ void CDXLearningDlg::OnMouseMove( UINT nFlags, CPoint point )
 	{
 		float x = 0.0f;
 		float y = 0.0f;
-		x = point.x - _ptBegin.x;
-		y = point.y - _ptBegin.y;
-		x /= -100;
-		y /= 100;
+		float z = 0.0f;
+		CD3DXDeviceHelper::Instance().GetRotateCamera(x, y, z);
+		x += (point.x - _ptBegin.x) / 100.0;
+		y += (point.y - _ptBegin.y) / -100.0;
 		//CD3DXDeviceHelper::Instance().SetRotate(x, y, 0);
 		CD3DXDeviceHelper::Instance().RotateCamera(x, y, 0);
 		Invalidate(FALSE);
+		_ptBegin = point;
 	}
 	CDialogEx::OnMouseMove(nFlags, point);
 }
@@ -139,5 +141,15 @@ void CDXLearningDlg::OnLButtonUp( UINT nFlags, CPoint point )
 	Invalidate(FALSE);
 	ReleaseCapture();
 	CDialogEx::OnLButtonUp(nFlags, point);
+}
+
+BOOL CDXLearningDlg::OnMouseWheel( UINT nFlags, short zDelta, CPoint pt )
+{
+	float fDelta = zDelta/1200.0;
+	float fOri = 0.0f;
+	CD3DXDeviceHelper::Instance().GetCameraDistance(fOri);
+	CD3DXDeviceHelper::Instance().SetCameraDistance(fOri + fDelta);
+	Invalidate(FALSE);
+	return TRUE;
 }
 
