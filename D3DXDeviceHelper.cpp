@@ -610,8 +610,8 @@ D3DXVECTOR3 CD3DXDeviceHelper::CalNormalVec3( D3DXVECTOR3 v1, D3DXVECTOR3 v2, D3
 BOOL CD3DXDeviceHelper::SetupMirrorSample()
 {
 	//¼ÓÔØÎÆÀí
-	D3DXCreateTextureFromFile(_device, _T("D:\\DXLearning\\pic\\wall.jpg"), &_TexWall);
-	D3DXCreateTextureFromFile(_device, _T("D:\\DXLearning\\pic\\floor.jpg"), &_TexFloor);
+	D3DXCreateTextureFromFile(_device, _T("bin\\pic\\wall.jpg"), &_TexWall);
+	D3DXCreateTextureFromFile(_device, _T("bin\\pic\\floor.jpg"), &_TexFloor);
 
 	//¿ªµÆ
 	_device->SetRenderState(D3DRS_LIGHTING, true);

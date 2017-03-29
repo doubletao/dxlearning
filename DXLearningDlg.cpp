@@ -126,7 +126,7 @@ void CDXLearningDlg::OnMouseMove( UINT nFlags, CPoint point )
 		x = point.x - _ptBegin.x;
 		y = point.y - _ptBegin.y;
 		x /= -100;
-		y /= -100;
+		y /= 100;
 		//CD3DXDeviceHelper::Instance().SetRotate(x, y, 0);
 		CD3DXDeviceHelper::Instance().RotateCamera(x, y, 0);
 		Invalidate(FALSE);
