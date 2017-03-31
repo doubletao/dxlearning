@@ -32,6 +32,7 @@ private:
 	IDirect3DTexture9 * _Tex;
 	IDirect3DTexture9 * _TexWall;
 	IDirect3DTexture9 * _TexFloor;
+	IDirect3DTexture9 * _TexTeapot;
 
 	BOOL bInitialized;
 public:

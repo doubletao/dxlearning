@@ -76,6 +76,7 @@ CD3DXDeviceHelper::CD3DXDeviceHelper(void)
 	, _Tex(NULL)
 	, _TexWall(NULL)
 	, _TexFloor(NULL)
+	, _TexTeapot(NULL)
 	, _xCamera(0) //摄像机的x旋转
 	, _yCamera(0) //摄像机的y旋转
 	, _zCamera(0) //摄像机的y旋转
@@ -607,6 +608,7 @@ BOOL CD3DXDeviceHelper::SetupMirrorSample()
 	//加载纹理
 	D3DXCreateTextureFromFile(_device, _T("bin\\pic\\wall.jpg"), &_TexWall);
 	D3DXCreateTextureFromFile(_device, _T("bin\\pic\\floor.jpg"), &_TexFloor);
+	D3DXCreateTextureFromFile(_device, _T("bin\\pic\\teapot.png"), &_TexTeapot);
 
 	//开灯
 	_device->SetRenderState(D3DRS_LIGHTING, true);
@@ -617,7 +619,7 @@ BOOL CD3DXDeviceHelper::SetupMirrorSample()
 		D3DLIGHT9 ptLight;
 		::ZeroMemory(&ptLight, sizeof(D3DLIGHT9));
 		ptLight.Type = D3DLIGHT_POINT;
-		ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
+		ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.6f;
 		ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
 		ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
 		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, -6.0f);
@@ -632,7 +634,7 @@ BOOL CD3DXDeviceHelper::SetupMirrorSample()
 		D3DLIGHT9 ptLight;
 		::ZeroMemory(&ptLight, sizeof(D3DLIGHT9));
 		ptLight.Type = D3DLIGHT_POINT;
-		ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
+		ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.6f;
 		ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
 		ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
 		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, 6.0f);
@@ -794,6 +796,34 @@ BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
 		D3DXCreateBox(_device, 4.0f, 4.0f, 0.05f, &pMeshWall, NULL);
 		pMeshWall->DrawSubset(0);
 	}
+
+	//绘制茶壶实体
+	{
+		//茶壶的材质
+		D3DMATERIAL9 mtrTeapot;
+		mtrTeapot.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(125, 255, 125);//ambient环境光
+		mtrTeapot.Diffuse = (D3DXCOLOR)D3DCOLOR_ARGB(125, 125, 255, 125);//diffuse漫反射
+		mtrTeapot.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(125, 125, 125);//specular高光
+		mtrTeapot.Emissive = (D3DXCOLOR)D3DCOLOR_XRGB(0, 0, 0);//emissive自发光
+		mtrTeapot.Power = 5.0f;
+		_device->SetMaterial(&mtrTeapot);
+
+		//茶壶的纹理
+		_device->SetTexture(0, _TexTeapot);
+
+		//茶壶的矩阵
+		D3DXMATRIX pos;
+		D3DXMatrixTranslation(&pos, 0.0f, 2.0f, -4.0f);
+		D3DXMATRIX scale;
+		D3DXMatrixScaling(&scale, 0.7f, 0.7f, 0.7f);
+		pos *= scale;
+		_device->SetTransform(D3DTS_WORLD, &pos);
+
+		ID3DXMesh * pMeshTeapot = NULL;
+		D3DXCreateTeapot(_device, &pMeshTeapot, NULL);
+		pMeshTeapot->DrawSubset(0);
+	}
+
 	_device->EndScene();
 	_device->Present(NULL, NULL, 0, NULL);
 
