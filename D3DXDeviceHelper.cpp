@@ -487,7 +487,7 @@ BOOL CD3DXDeviceHelper::SetupTextureSample()
 		ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
 		ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
 		ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
-		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, -2.0f);
+		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, -4.0f);
 		ptLight.Range = 8.0f;
 		_device->SetLight(0, &ptLight);
 		_device->LightEnable(0, true);
@@ -501,7 +501,7 @@ BOOL CD3DXDeviceHelper::SetupTextureSample()
 		ptLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
 		ptLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
 		ptLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
-		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, 2.0f);
+		ptLight.Position = D3DXVECTOR3(0.0f, 0.0f, 4.0f);
 		ptLight.Range = 8.0f;
 		_device->SetLight(1, &ptLight);
 		_device->LightEnable(1, true);
@@ -678,6 +678,25 @@ BOOL CD3DXDeviceHelper::DisplayMirrorSample( time_t timeDeta )
 	{
 		fUp = -1.0f;
 	}
+
+	{
+		//¾Û¹âµÆ(µ×)
+		D3DLIGHT9 spotLight;
+		::ZeroMemory(&spotLight, sizeof(D3DLIGHT9));
+		spotLight.Type = D3DLIGHT_SPOT;
+		spotLight.Diffuse = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255);
+		spotLight.Specular = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.1f;
+		spotLight.Ambient = (D3DXCOLOR)D3DCOLOR_XRGB(255, 255, 255) * 0.0f;
+		spotLight.Position = D3DXVECTOR3(0.0f, -6.0f, 0.0f);
+		spotLight.Range = 8.0f;
+		spotLight.Falloff = 2.0f;
+		spotLight.Direction = D3DXVECTOR3(0.1f, 1.0f, 0.0f);
+		spotLight.Theta = D3DX_PI / 3;
+		spotLight.Phi = D3DX_PI / 2;
+		_device->SetLight(2, &spotLight);
+		_device->LightEnable(2, true);
+	}
+
 	D3DXVECTOR3 up(0.0f, fUp, 0.0f);
 	D3DXMatrixLookAtLH(&camera, &position, &lookat, &up);
 	_device->SetTransform(D3DTS_VIEW, &camera);
